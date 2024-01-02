@@ -39,19 +39,20 @@ window_height = 800
 window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Space Invaders")
 
-# Set up the player with the constructor
-player = entities.Player(x=window_width // 2, y=window_height - 100, 
-                         width=75, height=75, speed_x=1, speed_y=1, 
-                         player_sprite=player_sprite, player_score=0, 
-                         player_lives=3, player_air=3000,
-                         crunch_delay = 500,  # Time to wait between crunching urchins, in milliseconds
-                         reload_delay = 500  # Time to wait between missile shots, in milliseconds
-)
-
 #Manage the player's air
 player_air_max = 3000
 # player_air = player_air_max
 air_replenish_rate = 100
+
+# Set up the player with the constructor
+player = entities.Player(x=window_width // 2, y=window_height - 100, 
+                         width=75, height=75, speed_x=1, speed_y=1, 
+                         player_sprite=player_sprite, player_score=0, 
+                         player_lives=3, player_air=player_air_max,
+                         crunch_delay = 300,  # Time to wait between crunching urchins, in milliseconds
+                         reload_delay = 500  # Time to wait between missile shots, in milliseconds
+)
+
 nbubble = 5
 bubble_width = 50
 bubble_height = 50
@@ -111,7 +112,6 @@ missile_properties = {
     "colour": (144, 144, 144)
 }
 # Initialize the list of missiles
-missiles = []
 
 #setup the shooting spines
 spine_width = 5
@@ -152,6 +152,8 @@ while running:
 
         
     # Move the player
+    #Put this here, not in the event loop, the event loop
+        # only gets trigged when the key is pressed, not held
     keys = pygame.key.get_pressed()
     player.move_player(keys, window_width, window_height)
 
@@ -238,40 +240,13 @@ while running:
         window.blit(urchin_sprite, (enemy.rect.x, enemy.rect.y))
 
     # Make the player shoot a missile when space is pressed 
-    if keys[pygame.K_SPACE]:
-        if player.missile_count > 0:
-            player.missile_count -= 1
-            #init a new missile
-            missile = entities.Missile(player, missile_properties["width"],
-                             missile_properties["height"],
-                             0, #x speed
-                             missile_properties["speed"]
-            )
-            missiles.append(missile)
-            pygame.draw.circle(window, missile_properties["colour"], 
-                               (missile.rect.x, missile.rect.y), missile_properties["diameter"])
-        elif pygame.time.get_ticks() - player.reload_time >= player.reload_delay:
-            player.missile_count = 1  # Reset the missile count
-            player.reload_time = pygame.time.get_ticks()  # Record the time of the reload
+    player.shoot_missile(keys, missile_properties, window)
 
     # Update the position of each missile
-    for missile in missiles:
-        if missile.rect.y < 0:
-            missiles.remove(missile)
-        else:
-            missile.rect.y -= missile_speed
-            # Draw the missile
-            pygame.draw.circle(window, missile_properties["colour"], 
-                               (missile.rect.x, missile.rect.y), missile_properties["diameter"])
-            # Check for collisions with enemies
-            for enemy in enemies[:]:  # Iterate over a copy of the list
-                if missile.rect.colliderect(enemy):
-                    missiles.remove(missile)
-                    enemies.remove(enemy)
-                    crunch_sound.play()
-                    player.player_score += 1
-                    break  # Break out of the inner loop
-    
+    player.move_missile(enemies,
+                      missile_properties, window,
+                      crunch_sound)
+
     if ( player.player_score % 10 == 0) and not enemy_speed_increased:
         enemy_max_speed += 1
         enemy_min_speed += 1

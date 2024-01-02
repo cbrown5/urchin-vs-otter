@@ -24,8 +24,7 @@ class Player:
         self.reload_delay = reload_delay
         self.paused = False
         self.crunch_delay = crunch_delay
-
-
+        self.missiles = []
 
     #Create a method to move the player
     def move_player(self, keys, window_width, window_height):
@@ -40,19 +39,43 @@ class Player:
                 self.rect.y += self.speed_y
 
 #     #Create a method to shoot missiles
-#     def shootMissile(self, keys, missile_list, missile_sprite):
-#         if keys[pygame.K_SPACE]:
-#             if self.missile_count > 0:
-#                 self.missile_count -= 1
-#                 missile_x = self.rect.x +  self.width // 2 - missile_width // 2
-#                 missile_y = self.rect.y - missile_height
-#                 #draw the missile as a grey circle
-#                 missile = pygame.Rect(missile_x, missile_y, missile_width, missile_height)
-#                 missiles.append(missile)
-#                 pygame.draw.circle(window, (144, 144, 144), (missile_x, missile_y), 10)
-#             elif pygame.time.get_ticks() - self.reload_time >= reload_delay:
-#                 self.missile_count = 1  # Reset the missile count
-#                 self.reload_time = pygame.time.get_ticks()  # Record the time of the reload
+    def shoot_missile(self, keys, missile_properties, window):
+        if keys[pygame.K_SPACE]:
+                if self.missile_count > 0:
+                    self.missile_count -= 1
+                    #init a new missile
+                    missile = Missile(self, missile_properties["width"],
+                                    missile_properties["height"],
+                                    0, #x speed
+                                    missile_properties["speed"]
+                    )
+                    self.missiles.append(missile)
+                    pygame.draw.circle(window, missile_properties["colour"], 
+                                    (missile.rect.x, missile.rect.y), missile_properties["diameter"])
+                elif pygame.time.get_ticks() - self.reload_time >= self.reload_delay:
+                    self.missile_count = 1  # Reset the missile count
+                    self.reload_time = pygame.time.get_ticks()  # Record the time of the reload
+
+    def move_missile(self, enemies, 
+                     missile_properties, window, crunch_sound):
+        for missile in self.missiles:
+            if missile.rect.y < 0:
+                self.missiles.remove(missile)
+            else:
+                missile.rect.y -= missile.speed_y
+                # Draw the missile
+                pygame.draw.circle(window, missile_properties["colour"], 
+                                (missile.rect.x, missile.rect.y), missile_properties["diameter"])
+                # Check for collisions with enemies
+                for enemy in enemies[:]:  # Iterate over a copy of the list
+                    if missile.rect.colliderect(enemy):
+                        self.missiles.remove(missile)
+                        enemies.remove(enemy)
+                        crunch_sound.play()
+                        self.player_score += 1
+                        break  # Break out of the inner loop
+
+
 
 
 # Create a class for the missile
@@ -67,7 +90,4 @@ class Missile:
         self.width = width
         self.height = height
         self.rect = pygame.Rect(x, y, width, height)
-
-    def move_missile(self):
-        self.rect.y -= self.speed_y
 

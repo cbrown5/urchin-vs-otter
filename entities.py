@@ -5,12 +5,35 @@ import random
 
 
 class Enemy:
-    def __init__(self, x, y, width, height, speed_x, speed_y):
+    def __init__(self, x, y, width, height, speed_x, speed_y,
+                 pause_rate):
         self.rect = pygame.Rect(x, y, width, height)
         self.speed_x = speed_x
         self.speed_y = speed_y
+        self.pause_rate = pause_rate
 
-class StaticEntity:
+class Enemies:
+    def __init__(self):
+        self.enemies = []
+
+    def move_enemies(self, window_width,
+                   window_height):
+        for enemy in self:
+            if random.randint(1, enemy.pause_rate) == 1:    
+                if random.randint(1, 20) == 1:
+                    enemy.rect.x += enemy.speed_x
+                if enemy.rect.x <= 0 or enemy.rect.x >= window_width - enemy_width:
+                    enemy.speed_x *= -1
+                #randomly change the direction of the enemy
+                if random.randint(1, 2500) == 1:
+                    enemy.speed_x *= -1
+                #randomly advance the enemy
+                if random.randint(1, 10) == 1:
+                    enemy.rect.y += enemy.speed_y
+                if enemy.rect.y > window_height:
+                    self.remove(enemy)
+
+class Kelp:
     def __init__(self, window_width, window_height,
                  width, height):
         self.x = random.randint(0, window_width - width)

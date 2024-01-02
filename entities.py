@@ -10,7 +10,7 @@ class Enemy:
         self.speed_x = speed_x
         self.speed_y = speed_y
 
-class StaticEntity:
+class Kelp:
     def __init__(self, window_width, window_height,
                  width, height):
         self.x = random.randint(0, window_width - width)

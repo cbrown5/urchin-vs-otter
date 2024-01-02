@@ -66,7 +66,7 @@ for bubble_x in bubble_x_coords:
     bubbles.append(bubble)
 
 # Set up the enemies
-max_enemies_per_wave = 20
+max_enemies_per_wave = 12
 enemy_min_speed = 1
 enemy_max_speed = 2
 enemy_pause_rate = 20 #this sets the rate at which the enemy pauses before moving again
@@ -241,8 +241,8 @@ while running:
                       crunch_sound)
 
     if ( player.player_score % 10 == 0) and not enemy_speed_increased:
-        enemy_max_speed += 1
-        enemy_min_speed += 1
+        enemy_max_speed = min(15, enemy_max_speed+1)
+        enemy_min_speed = min(10, enemy_min_speed+1)
         # halve the pause rate
         enemy_pause_rate = max(1, enemy_pause_rate // 2)
         enemy_speed_increased = True

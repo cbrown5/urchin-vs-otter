@@ -76,7 +76,7 @@ enemy_width = 75
 enemy_height = 75
 urchin_sprite = pygame.transform.scale(urchin_sprite, (enemy_width, enemy_height))
 
-enemies = entities.Enemies()
+enemies = []
 # Initialize the timer for waves of enemies
 new_wave = 1
 wave_time = 0
@@ -139,10 +139,7 @@ while running:
             #randomly create an enemy that moves left or right
             if random.randint(1, 2) == 1:
                 enemy_speed_x *= -1
-            enemy = entities.Enemy(enemy_x, enemy_y, 
-                                   enemy_width, enemy_height, 
-                                   enemy_speed_x, enemy_speed_y,
-                                   enemy_pause_rate)
+            enemy = entities.Enemy(enemy_x, enemy_y, enemy_width, enemy_height, enemy_speed_x, enemy_speed_y)
             enemies.append(enemy)
     elif pygame.time.get_ticks() - wave_time >= wave_delay:
         new_wave = 1  # Reset the indicator to allow a new wave
@@ -156,12 +153,20 @@ while running:
     player.move_player(keys, window_width, window_height)
 
     # Move all the enemies
-    #UP TO HERE< currently not working. 
-    # need to think of a way to store multiple enemies
-    # so I can iterate over them for moving them. The problem is 
-    # if I have a move_enemy function that moves one enemy at a time, 
-    # how do I remove an enemy from the list of enemies? 
-    enemies.move_enemies(window_width, window_height)
+    for enemy in enemies:
+        if random.randint(1, enemy_pause_rate) == 1:    
+            if random.randint(1, 20) == 1:
+                enemy.rect.x += enemy.speed_x
+            if enemy.rect.x <= 0 or enemy.rect.x >= window_width - enemy_width:
+                enemy.speed_x *= -1
+            #randomly change the direction of the enemy
+            if random.randint(1, 2500) == 1:
+                enemy.speed_x *= -1
+            #randomly advance the enemy
+            if random.randint(1, 10) == 1:
+                enemy.rect.y += enemy.speed_y
+            if enemy.rect.y > window_height:
+                enemies.remove(enemy)
     
     # Check for collision and remove enemy and/or kelp
     for enemy in enemies:

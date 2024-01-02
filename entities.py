@@ -1,7 +1,24 @@
 # Create a player class with attributes and methods
 
 import pygame
-import pygame
+import random
+
+
+class Enemy:
+    def __init__(self, x, y, width, height, speed_x, speed_y):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+
+class StaticEntity:
+    def __init__(self, window_width, window_height,
+                 width, height):
+        self.x = random.randint(0, window_width - width)
+        self.y = random.randint(window_height // 3 * 2, 
+                                window_height - height)
+        self.rect = pygame.Rect(self.x, self.y, width, height)
+
+        
 
 #Define a player class with methods for moving and shooting
 

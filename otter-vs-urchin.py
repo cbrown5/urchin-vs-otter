@@ -60,7 +60,6 @@ bubbles = []
 # Calculate the x-coordinates for evenly distributing the bubbles
 bubble_x_coords = np.linspace(0, window_width - bubble_width, nbubble)
 
-
 for bubble_x in bubble_x_coords:
     bubble_y = random.randint(window_height // 3 * 2, window_height - bubble_height)
     bubble = pygame.Rect(int(bubble_x), bubble_y, bubble_width, bubble_height)
@@ -76,11 +75,7 @@ score_speed_increment = 10 #increase the speed of the enemies every time the pla
 enemy_width = 75
 enemy_height = 75
 urchin_sprite = pygame.transform.scale(urchin_sprite, (enemy_width, enemy_height))
-class Enemy:
-    def __init__(self, x, y, width, height, speed_x, speed_y):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.speed_x = speed_x
-        self.speed_y = speed_y
+
 enemies = []
 # Initialize the timer for waves of enemies
 new_wave = 1
@@ -89,18 +84,18 @@ wave_delay = 5*1E3  # Time to wait between waves, in milliseconds
 enemy_speed_increased = True #flag to indicate if the enemy speed has been increased
 
 #Set up the kelp
-kelp_width = 50
-kelp_height = 100
+kelp_properties = {
+    "width":20,
+    "height":50
+}
 kelp_sprite = pygame.transform.scale(kelp_sprite, (kelp_width, kelp_height))
 nkelps = 20
 kelp_remaining = nkelps
 kelps = []
 for i in range(nkelps):
-    #Arrange the kelps randomly in the bottom third of the screen
-    kelp_x = random.randint(0, window_width - kelp_width)
-    kelp_y = random.randint(window_height // 3 * 2, window_height - kelp_height)
-    #kelp_y = window_height - kelp_height
-    kelp = pygame.Rect(kelp_x, kelp_y, kelp_width, kelp_height)
+    kelp = entities.Kelp(window_width, window_height,
+                kelp_properties["width"],
+                kelp_properties["height"])
     kelps.append(kelp)
 
 #setup the missile
@@ -144,7 +139,7 @@ while running:
             #randomly create an enemy that moves left or right
             if random.randint(1, 2) == 1:
                 enemy_speed_x *= -1
-            enemy = Enemy(enemy_x, enemy_y, enemy_width, enemy_height, enemy_speed_x, enemy_speed_y)
+            enemy = entities.Enemy(enemy_x, enemy_y, enemy_width, enemy_height, enemy_speed_x, enemy_speed_y)
             enemies.append(enemy)
     elif pygame.time.get_ticks() - wave_time >= wave_delay:
         new_wave = 1  # Reset the indicator to allow a new wave
@@ -153,7 +148,7 @@ while running:
         
     # Move the player
     #Put this here, not in the event loop, the event loop
-        # only gets trigged when the key is pressed, not held
+    # only gets trigged when the key is pressed, not held
     keys = pygame.key.get_pressed()
     player.move_player(keys, window_width, window_height)
 
@@ -183,7 +178,7 @@ while running:
             pygame.time.set_timer(pygame.USEREVENT, player.crunch_delay)
             continue
         for kelp in kelps:
-            if kelp.colliderect(enemy):
+            if kelp.rect.colliderect(enemy):
                # enemies.remove(enemy)
                 kelps.remove(kelp)
                 munch_sound.play()
@@ -232,11 +227,9 @@ while running:
     pygame.draw.rect(window, (66, 217, 255), (5, 100, (100* player.player_air/player_air_max), 20))
 
     # Draw the player and enemy
-    #pygame.draw.rect(window, (255, 255, 255), player)
     window.blit(player.player_sprite, (player.rect.x, player.rect.y))
 
     for enemy in enemies:
-        #pygame.draw.rect(window, (137, 52, 235), enemy)
         window.blit(urchin_sprite, (enemy.rect.x, enemy.rect.y))
 
     # Make the player shoot a missile when space is pressed 

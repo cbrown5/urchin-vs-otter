@@ -32,6 +32,9 @@ munch_sound = pygame.mixer.Sound('assets/munching-kelp.wav')  # Replace with the
 player_sprite = pygame.image.load('assets/otter.png')  # Replace with the path to your image
 urchin_sprite = pygame.image.load('assets/urchin.png')  # Replace with the path to your image
 kelp_sprite = pygame.image.load('assets/kelp.png')  # Replace with the path to your image
+coral_sprite = pygame.image.load('assets/coral.png')  # Replace with the path to your image
+bubble_sprite = pygame.image.load('assets/bubbles.png')  # Replace with the path to your image
+lobster_sprite = pygame.image.load('assets/lobster.png')  # Replace with the path to your image
 
 # Set up the game window
 window_width = 1200
@@ -39,12 +42,12 @@ window_height = 800
 window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Space Invaders")
 
-#Manage the player's air
-player_air_max = 3000
+#Manage the player 's air
+player_air_max = 15000
 # player_air = player_air_max
 air_replenish_rate = 100
 
-# Set up the player with the constructor
+# Set up the player with the constructors
 player = entities.Player(x=window_width // 2, y=window_height - 100, 
                          width=75, height=75, speed_x=1, speed_y=1, 
                          player_sprite=player_sprite, player_score=0, 
@@ -57,6 +60,7 @@ nbubble = 5
 bubble_width = 50
 bubble_height = 50
 bubbles = []
+bubble_sprite = pygame.transform.scale(bubble_sprite, (bubble_width, bubble_height))
 # Calculate the x-coordinates for evenly distributing the bubbles
 bubble_x_coords = np.linspace(0, window_width - bubble_width, nbubble)
 
@@ -66,7 +70,7 @@ for bubble_x in bubble_x_coords:
     bubbles.append(bubble)
 
 # Set up the enemies
-max_enemies_per_wave = 12
+max_enemies_per_wave = 20
 enemy_min_speed = 1
 enemy_max_speed = 2
 enemy_pause_rate = 20 #this sets the rate at which the enemy pauses before moving again
@@ -85,17 +89,24 @@ enemy_speed_increased = True #flag to indicate if the enemy speed has been incre
 
 #Set up the kelp
 kelp_properties = {
-    "width":20,
-    "height":50
+    "width":60,
+    "height":80
 }
-kelp_sprite = pygame.transform.scale(kelp_sprite, (kelp_width, kelp_height))
+kelp_sprite = pygame.transform.scale(kelp_sprite, (kelp_properties["width"], kelp_properties["height"]))
+coral_sprite = pygame.transform.scale(coral_sprite, (kelp_properties["width"], kelp_properties["height"]))
 nkelps = 20
 kelp_remaining = nkelps
 kelps = []
 for i in range(nkelps):
+    #randomly choose a sprite
+    if random.randint(1, 2) == 1:
+        this_sprite = kelp_sprite
+    else:
+        this_sprite = coral_sprite
     kelp = entities.Kelp(window_width, window_height,
                 kelp_properties["width"],
-                kelp_properties["height"])
+                kelp_properties["height"], 
+                this_sprite)
     kelps.append(kelp)
 
 #setup the missile
@@ -116,7 +127,23 @@ spine_air_cost = player_air_max // 10
 # Initialize the list of missiles
 spines = []
 
+#Initialize lobsters
+lobster_properties = {
+    "width": 75,
+    "height": 75,
+    "speed": 1
+}
+lobster_sprite = pygame.transform.scale(lobster_sprite, (lobster_properties["width"], lobster_properties["height"]))
+lobsters = []
+
+# Initialize question_active and user_input at the start of your game
+question_active = False
+user_input = ''
+temp_input = '' 
+
+#
 # Game loop
+#
 running = True
 while running:
     # Handle events
@@ -145,7 +172,6 @@ while running:
         new_wave = 1  # Reset the indicator to allow a new wave
         wave_time = pygame.time.get_ticks()  # Record the time of the reload
 
-        
     # Move the player
     #Put this here, not in the event loop, the event loop
     # only gets trigged when the key is pressed, not held
@@ -168,6 +194,10 @@ while running:
             if enemy.rect.y > window_height:
                 enemies.remove(enemy)
     
+    # Move all the lobsters
+    for lobster in lobsters:
+        lobster.move_random(window_width, window_height)
+
     # Check for collision and remove enemy and/or kelp
     for enemy in enemies:
         if player.rect.colliderect(enemy):
@@ -177,6 +207,10 @@ while running:
             player.paused = True  # Pause the player
             pygame.time.set_timer(pygame.USEREVENT, player.crunch_delay)
             continue
+        for lobster in lobsters:
+            if lobster.rect.colliderect(enemy):
+                enemies.remove(enemy)  # Remove the enemy that collided with the lobster
+                break
         for kelp in kelps:
             if kelp.rect.colliderect(enemy):
                # enemies.remove(enemy)
@@ -206,13 +240,12 @@ while running:
 
     # Draw the bubbles
     for bubble in bubbles:
-        pygame.draw.rect(window, (66, 217, 255), bubble)
-        #window.blit(kelp_sprite, (kelp.x, kelp.y))
+        # pygame.draw.rect(window, (66, 217, 255), bubble)
+        window.blit(bubble_sprite, (bubble.x, bubble.y))
 
     # Draw the kelp
     for kelp in kelps:
-        #pygame.draw.rect(window, (171, 146, 5), kelp)
-        window.blit(kelp_sprite, (kelp.x, kelp.y))
+        window.blit(kelp.sprite, (kelp.x, kelp.y))
     
     # Draw the player's lives
     nkelp_text = font.render(f"Kelp remaining: {kelp_remaining}", True, (171, 146, 5))
@@ -221,6 +254,51 @@ while running:
     #Draw the player's score
     score_text = font.render(f"Score: { player.player_score}", True, (137, 52, 235))
     window.blit(score_text, (5, 50))  # Change the position as needed
+    
+    #UP TO HERE< why is the score not updating?
+    #Randomly draw a question
+    if random.randint(1, 2500) == 1:
+        question = entities.Question()
+        question_active = True
+        lobster_speed_x = random.randint(lobster_properties["speed"], lobster_properties["speed"]*2)
+        lobster_speed_y = lobster_speed_x
+        if random.randint(1, 2) == 1:
+            lobster_speed_x *= -1
+        lobster = entities.Lobster(window_width, window_height, lobster_properties["width"], 
+                                lobster_properties["height"], lobster_speed_x, lobster_speed_y, lobster_sprite)
+        lobsters.append(lobster)
+
+    if question_active:
+        question.question_text = font.render(f"{question.question}", True, (137, 52, 235))
+        window.blit(question.question_text, (5, 200)) 
+ 
+        # Capture keyboard events
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    print(temp_input)
+                    user_input = temp_input
+                    # If the user presses Enter, check the answer
+                    print(question.answer)
+                    print(user_input)
+                    if user_input == question.answer:
+                        print('correct answer')
+                        lobster_speed_x = random.randint(lobster_properties["speed"], lobster_properties["speed"]*2)
+                        lobster_speed_y = lobster_speed_x
+                        if random.randint(1, 2) == 1:
+                            lobster_speed_x *= -1
+                        lobster = entities.Lobster(window_width, window_height, lobster_properties["width"], 
+                                                lobster_properties["height"], lobster_speed_x, lobster_speed_y, lobster_sprite)
+                        lobsters.append(lobster)
+                   # Reset user_input and question_active
+                    user_input = ''
+                    temp_input = '' 
+                    question_active = False
+                elif pygame.K_0 <= event.key <= pygame.K_9 or pygame.K_KP0 <= event.key <= pygame.K_KP9:
+                    # If the user presses any other key, add it to user_input
+                    temp_input += event.unicode
+
+
 
     #show a health bar with the player's air
     pygame.draw.rect(window, (255, 0, 0), (5, 100, 100, 20))
@@ -231,6 +309,12 @@ while running:
 
     for enemy in enemies:
         window.blit(urchin_sprite, (enemy.rect.x, enemy.rect.y))
+
+    #Draw the lobsters
+    for lobster in lobsters:
+        window.blit(lobster.sprite, (lobster.rect.x, lobster.rect.y))
+
+    #
 
     # Make the player shoot a missile when space is pressed 
     player.shoot_missile(keys, missile_properties, window)
@@ -271,6 +355,9 @@ while running:
                 spines.remove(spine)
                 player.player_air -= spine_air_cost
                 break
+            for lobster in lobsters:
+                if spine.colliderect(lobster):
+                    lobsters.remove(lobster)
 
     #replenish the air if the player is on a bubble
     for bubble in bubbles:

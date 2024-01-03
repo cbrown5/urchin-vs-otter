@@ -12,12 +12,37 @@ class Enemy:
 
 class Kelp:
     def __init__(self, window_width, window_height,
-                 width, height):
+                 width, height, sprite):
         self.x = random.randint(0, window_width - width)
         self.y = random.randint(window_height // 3 * 2, 
                                 window_height - height)
         self.rect = pygame.Rect(self.x, self.y, width, height)
+        self.sprite = sprite
 
+#create a lobster class
+class Lobster:
+    def __init__(self, window_width, window_height,
+                 width, height, speed_x, speed_y, sprite):
+        self.x = random.randint(0, window_width - width)
+        self.y = random.randint(0, 
+                                window_height - height)
+        self.rect = pygame.Rect(self.x, self.y, width, height)
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+        self.sprite = sprite
+
+    #create a method that moves the lobster in a random direction
+    def move_random(self, window_width, window_height):
+        if random.randint(0, 1000) == 1:
+            self.speed_x *= -1
+        if random.randint(0, 1000) == 1:
+            self.speed_y *= -1
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+        if self.rect.x <= 0 or self.rect.x >= window_width - self.rect.width:
+            self.speed_x *= -1
+        if self.rect.y <= 0 or self.rect.y >= window_height - self.rect.height:
+            self.speed_y *= -1
         
 
 #Define a player class with methods for moving and shooting
@@ -107,4 +132,19 @@ class Missile:
         self.width = width
         self.height = height
         self.rect = pygame.Rect(x, y, width, height)
+
+#Create a class for quiz questions. The questions will be addition or subtractoin of two random integers less than 10
+class Question:
+
+    def __init__(self):
+        first = random.randint(0, 10)
+        second = random.randint(0, 10)
+        operation = random.randint(0, 1)
+        if operation == 0:
+            self.question = str(first) + " + " + str(second) + " = "
+            self.answer = first + second
+        else:
+            self.question = str(first) + " - " + str(second) + " = "
+            self.answer = first - second
+        
 

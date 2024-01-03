@@ -140,11 +140,11 @@ class Question:
         first = random.randint(0, 10)
         second = random.randint(0, 10)
         operation = random.randint(0, 1)
-        if operation == 0:
-            self.question = str(first) + " + " + str(second) + " = "
-            self.answer = first + second
-        else:
-            self.question = str(first) + " - " + str(second) + " = "
-            self.answer = first - second
+        #if operation == 0:
+        self.question = str(first) + " + " + str(second) + " = "
+        self.answer = first + second
+       # else:
+        #    self.question = str(first) + " - " + str(second) + " = "
+         #   self.answer = first - second
         
 
